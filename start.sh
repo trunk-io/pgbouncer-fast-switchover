@@ -5,7 +5,20 @@ PGB_DIR="/home/pgbouncer"
 INI="${PGB_DIR}/pgbouncer.ini"
 USERLIST="${PGB_DIR}/userlist.txt"
 
-if [ -z ${PGB_ADMIN_USERS+x} ]; then
+# iterate over env vars starting with DB_SECRET
+# https://stackoverflow.com/a/25765360
+while IFS='=' read -r name value ; do
+  if [ -n "${value}" ]; then
+    PGB_ADMIN_USERS=$(echo $value | jq ".username" | tr -d '"')","${PGB_ADMIN_USERS:-}
+    PGB_ADMIN_PASSWORDS=$(echo $value | jq ".password" | tr -d '"')","${PGB_ADMIN_PASSWORDS:-}
+    if [ -z "${PGB_DATABASES:-}" ]; then
+      PGB_LISTEN_PORT=$(echo $value | jq ".port")
+      PGB_DATABASES=$(echo "${value}" | jq -c '"host=" + .host + " port=" + (.port | tostring)' | tr -d '"')
+    fi
+  fi
+done < <(env | grep ^DB_SECRET)
+
+if [ -z "${PGB_ADMIN_USERS+x}" ]; then
   PGB_ADMIN_USERS="admin"
   PGB_ADMIN_PASSWORDS="pw"
 fi
@@ -24,12 +37,13 @@ cat <<- END > $INI
     listen_port = ${PGB_LISTEN_PORT:-5432}
     listen_addr = ${PGB_LISTEN_ADDR:-0.0.0.0}
     auth_type = md5
-    default_pool_size = 20
+    default_pool_size = ${POOL_SIZE:-45}
     log_connections = 1
     log_disconnections = 1
     log_pooler_errors = 1
     routing_rules_py_module_file = /home/pgbouncer/routing_rules.py
     log_stats = 1
+    pool_mode = transaction
     auth_file = $USERLIST
     logfile = $PGB_DIR/pgbouncer.log
     pidfile = $PGB_DIR/pgbouncer.pid

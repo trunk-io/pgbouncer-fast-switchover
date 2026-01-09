@@ -1,7 +1,7 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023
 
 RUN yum -y update
-RUN yum install -y tar net-tools curl vim unzip less libevent-devel openssl-devel python-devel libtool git patch make gcc wget --allowerasing
+RUN yum install -y tar net-tools curl vim unzip less libevent-devel openssl-devel python-devel libtool git patch make gcc wget jq --allowerasing
 
 # Install pandoc
 RUN ARCH="" && if [ "$(uname -m)" = "x86_64" ]; then ARCH='amd64'; else ARCH='arm64'; fi && export ${ARCH} && \
@@ -34,3 +34,5 @@ COPY ./start.sh /start.sh
 COPY ./pub_metrics.sh /pub_metrics.sh
 COPY ./adaptivepgbouncer.sh /adaptivepgbouncer.sh
 COPY ./routing_rules.py /home/pgbouncer/
+
+ENTRYPOINT ["/bin/bash", "/start.sh"]
