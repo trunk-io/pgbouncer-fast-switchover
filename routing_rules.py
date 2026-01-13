@@ -16,5 +16,5 @@
 
 
 # ROUTING FN - CALLED FROM PGBOUNCER-RR - DO NOT CHANGE NAME
-def routing_rules(username, query):
-	return "services"
+def routing_rules(username, query, in_transaction):
+	return None

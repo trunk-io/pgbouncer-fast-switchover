@@ -48,6 +48,11 @@ cat <<- END > $INI
     logfile = $PGB_DIR/pgbouncer.log
     pidfile = $PGB_DIR/pgbouncer.pid
     admin_users = ${PGB_ADMIN_USERS:-admin}
+    server_tls_sslmode = verify-full
+    server_tls_ca_file = ${SERVER_CERT_FILE:-/home/pgbouncer/server-certs/server.crt}
+    client_tls_sslmode = require
+    client_tls_key_file = ${CLIENT_KEY_FILE:-/home/pgbouncer/client-certs/tls.key}
+    client_tls_cert_file = ${CLIENT_CERT_FILE:-/home/pgbouncer/client-certs/tls.crt}
 END
   cat $INI
 fi
