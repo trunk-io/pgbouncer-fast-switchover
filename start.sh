@@ -54,6 +54,7 @@ cat <<- END > $INI
     client_tls_sslmode = require
     client_tls_key_file = ${CLIENT_KEY_FILE:-/home/pgbouncer/client-certs/tls.key}
     client_tls_cert_file = ${CLIENT_CERT_FILE:-/home/pgbouncer/client-certs/tls.crt}
+    ignore_startup_parameters = options,extra_float_digits
 END
   cat $INI
 fi
