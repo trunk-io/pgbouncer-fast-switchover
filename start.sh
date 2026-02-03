@@ -44,6 +44,7 @@ cat <<- END > $INI
     log_disconnections = 1
     log_pooler_errors = 1
     max_prepared_statements = 2000
+    track_extra_parameters = search_path
     routing_rules_py_module_file = /home/pgbouncer/routing_rules.py
     log_stats = 1
     pool_mode = transaction
