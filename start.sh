@@ -41,6 +41,8 @@ cat <<- END > $INI
     max_client_conn = ${MAX_CLIENT_CONN:-1000}
     unix_socket_dir = ${SOCKET_DIR:-/tmp/pgbouncer-socket}
     server_idle_timeout = ${SERVER_IDLE_TIMEOUT:-200}
+    tcp_keepalive = 1
+    tcp_keepidle = ${TCP_KEEPIDLE:-300}
     log_connections = 1
     log_disconnections = 1
     log_pooler_errors = 1
