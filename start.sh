@@ -86,4 +86,7 @@ chmod 0600 $INI
 chmod 0600 $USERLIST
 #/pub_metrics.sh &
 #/adaptivepgbouncer.sh &
-pgbouncer $INI ${VERBOSE:-}
+# exec so pgbouncer becomes PID 1: it then receives the container's SIGTERM
+# directly, and the preStop hook's SIGINT (sent via the pidfile) reaches the
+# real pgbouncer process instead of this wrapper shell.
+exec pgbouncer $INI ${VERBOSE:-}
