@@ -1,4 +1,35 @@
+<!-- TRUNK-SPECIFIC (everything below the "---" is the upstream awslabs README) -->
 
+# Trunk usage
+
+This image fronts the **services RDS** instance. Its `pgbouncer.ini` is generated at container start by
+[`start.sh`](./start.sh) from environment variables set in
+`trunk/infra/aws/cdk/src/construct/postgres.ts`. Bump `VERSION` in
+[`../docker_push.sh`](../docker_push.sh) **and** `PGBOUNCER_TAG` in `postgres.ts` (they are an
+IfChange/ThenChange pair) whenever `start.sh` or the image changes, then rebuild/push and redeploy.
+
+## Authentication
+
+- **Static userlist** (default): every `DB_SECRET*` env var's `username`/`password` is written into
+  `userlist.txt`, and clients authenticate against that file (`auth_type = md5`).
+- **Dynamic `auth_query`** (optional, set via the `AUTH_*` env vars below): for a user **not** in the
+  static userlist, PgBouncer runs `auth_query` to fetch the user's SCRAM verifier and authenticates via
+  SCRAM pass-through. Because Amazon RDS forbids reading `pg_shadow`/`pg_authid`, the query targets a
+  **self-managed** `pgbouncer.auth_lookup` table on the services DB (created by the trunk2 servicesDb
+  migration `add_pgbouncer_auth_lookup`), not the system catalog.
+
+| Env var | Purpose | Value in `postgres.ts` |
+| --- | --- | --- |
+| `AUTH_TYPE` | client auth method (`auth_type`) | `scram-sha-256` |
+| `AUTH_USER` | role PgBouncer connects as to run the query; must be in `userlist.txt` and own the lookup objects | `pgadmin` |
+| `AUTH_QUERY` | the lookup query (`$1` = username) | `SELECT uname, phash FROM pgbouncer.get_auth($1)` |
+| `AUTH_DBNAME` | database the query runs in | `main` |
+
+All four are optional; if `AUTH_QUERY` is unset the auth lines are omitted and behavior is unchanged.
+To add a role that authenticates dynamically, see
+`trunk2/docs/runbooks/services_db_pgbouncer_role.md`.
+
+---
 
 Have you ever wanted to split your database load across multiple servers or clusters without impacting the configuration or code of your client applications? Or perhaps you have wished for a way to intercept and modify application queries, so that you can make them use optimized tables (sorted, pre-joined, pre-aggregated, etc.), add security filters, or hide changes you have made in the schema?  
 

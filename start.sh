@@ -36,7 +36,7 @@ cat <<- END > $INI
 [pgbouncer]
     listen_port = ${PGB_LISTEN_PORT:-5432}
     listen_addr = ${PGB_LISTEN_ADDR:-0.0.0.0}
-    auth_type = md5
+    auth_type = ${AUTH_TYPE:-md5}
     default_pool_size = ${POOL_SIZE:-45}
     max_client_conn = ${MAX_CLIENT_CONN:-1000}
     unix_socket_dir = ${SOCKET_DIR:-/tmp/pgbouncer-socket}
@@ -62,6 +62,20 @@ cat <<- END > $INI
     client_tls_cert_file = ${CLIENT_CERT_FILE:-/home/pgbouncer/client-certs/tls.crt}
     ignore_startup_parameters = options,extra_float_digits
 END
+
+  # Enable auth_query pass-through when configured (set via the AUTH_* env vars in postgres.ts).
+  # Appended after the base config so it stays inert unless AUTH_QUERY is set -- clients in the
+  # static userlist above are unaffected; auth_query only fires for users NOT in that file.
+  # AUTH_QUERY is written through the env var (never as a literal above) so its `$1` placeholder
+  # survives: bash does not re-scan the text substituted for ${AUTH_QUERY}.
+  if [ -n "${AUTH_QUERY:-}" ]; then
+cat <<- AUTH >> $INI
+    auth_user = ${AUTH_USER}
+    auth_query = ${AUTH_QUERY}
+    auth_dbname = ${AUTH_DBNAME:-main}
+AUTH
+  fi
+
   cat $INI
 fi
 
