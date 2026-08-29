@@ -28,4 +28,10 @@ COPY ./adaptivepgbouncer.sh /adaptivepgbouncer.sh
 
 COPY ./routing_rules.py /home/pgbouncer/
 
+# The Deployment's preStop hook runs ./pre-stop.sh from /home/pgbouncer to
+# gracefully drain connections before shutdown. Without this COPY the hook
+# fails (FailedPreStopHook) and pgbouncer is hard-killed (SIGTERM), severing
+# live client connections.
+COPY ./pre-stop.sh /home/pgbouncer/pre-stop.sh
+
 #ENTRYPOINT ["/bin/bash", "/start.sh"]
