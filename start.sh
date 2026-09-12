@@ -100,4 +100,13 @@ chmod 0600 $INI
 chmod 0600 $USERLIST
 #/pub_metrics.sh &
 #/adaptivepgbouncer.sh &
-pgbouncer $INI ${VERBOSE:-}
+# Run pgbouncer as a child and not in the foreground, so that this script stays
+# PID 1 after pgbouncer exits. `|| true` is needed because of `set -e` above.
+pgbouncer $INI ${VERBOSE:-} &
+PGB_PID=$!
+wait "$PGB_PID" || true
+
+# Do not stop the container while the preStop hook still drains: kubelet reports
+# a hook that a container exit cuts short as FailedPreStopHook. Kubelet sends
+# SIGTERM as soon as the hook returns, which ends this sleep early.
+sleep 5
