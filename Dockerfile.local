@@ -1,6 +1,12 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023
 
 RUN yum -y update
+
+# eMudhra key compromise (2026-10): AL2023 has no ca-certificates without these roots yet, so block them.
+RUN trust extract --overwrite --format=pem-bundle --filter="pkcs11:object=emSign%20ECC%20Root%20CA%20-%20G3;type=cert" /etc/pki/ca-trust/source/blocklist/emSign_ECC_Root_CA_-_G3.pem && \
+    trust extract --overwrite --format=pem-bundle --filter="pkcs11:object=Comodo%20AAA%20Services%20root;type=cert" /etc/pki/ca-trust/source/blocklist/Comodo_AAA_Services_root.pem && \
+    update-ca-trust extract && \
+    ! trust list --filter=ca-anchors | grep -E "label: (emSign ECC Root CA - G3|Comodo AAA Services root)$"
 RUN yum install -y tar net-tools curl vim unzip less libevent-devel openssl-devel python-devel libtool git patch make gcc wget jq --allowerasing
 
 # Install pandoc
